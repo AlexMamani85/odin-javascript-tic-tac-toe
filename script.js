@@ -142,8 +142,10 @@ function Gameboard() {
   
       // Display player's turn
       playerTurnDiv.textContent = `${activePlayer.name}'s turn...`
+      playerTurnDiv.style = "text-align: left;"
       if(winner) {
         playerTurnDiv.textContent = `${winner} WINS!`
+        playerTurnDiv.style = "text-align: center;"
       }
       // Render board squares
       board.forEach((row, indexRow) => {
