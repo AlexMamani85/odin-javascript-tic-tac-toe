@@ -1,6 +1,6 @@
 function Gameboard() {
-    const rows = 6;
-    const columns = 7;
+    const rows = 3;
+    const columns = 3;
     const board = [];
   
     for (let i = 0; i < rows; i++) {
@@ -12,25 +12,25 @@ function Gameboard() {
   
     const getBoard = () => board;
   
-    const dropToken = (column, player) => {
-      const availableCells = board.filter((row) => row[column].getValue() === 0).map(row => row[column]);
+    const dropToken = (column, row, player) => {
+      const availableCells = board.filter((row) => row[column].getValue() === "").map(row => row[column]);
   
       if (!availableCells.length) return;
   
-      const lowestRow = availableCells.length - 1;
-      board[lowestRow][column].addToken(player);
+      //const lowestRow = availableCells.length - 1;
+      board[row][column].addToken(player);
     };
   
     const printBoard = () => {
       const boardWithCellValues = board.map((row) => row.map((cell) => cell.getValue()))
-      console.log(boardWithCellValues);
+      return boardWithCellValues;
     };
   
     return { getBoard, dropToken, printBoard };
   }
   
   function Cell() {
-    let value = 0;
+    let value = "";
   
     const addToken = (player) => {
       value = player;
@@ -53,11 +53,11 @@ function Gameboard() {
     const players = [
       {
         name: playerOneName,
-        token: 1
+        token: "X"
       },
       {
         name: playerTwoName,
-        token: 2
+        token: "O"
       }
     ];
   
@@ -70,14 +70,14 @@ function Gameboard() {
   
     const printNewRound = () => {
       board.printBoard();
-      console.log(`${getActivePlayer().name}'s turn.`);
+      //console.log(`${getActivePlayer().name}'s turn.`);
     };
   
-    const playRound = (column) => {
-      console.log(
+    const playRound = (column, row) => {
+      /*console.log(
         `Dropping ${getActivePlayer().name}'s token into column ${column}...`
-      );
-      board.dropToken(column, getActivePlayer().token);
+      );*/
+      board.dropToken(column, row, getActivePlayer().token);
   
       /*  This is where we would check for a winner and handle that logic,
           such as a win message. */
@@ -85,12 +85,44 @@ function Gameboard() {
       switchPlayerTurn();
       printNewRound();
     };
+
+    const checkWinner = () => {
+      const boardWithCellValues = board.printBoard();
+      let winner = null;
+      // Check rows
+      boardWithCellValues.forEach(row => {
+        if (row[0] === row[1] && row[0] === row[2] && row[0] !== "") {
+          winner = row[0];
+        }
+
+      })
+      
+      boardWithCellValues.forEach((row, index) => {
+        if (boardWithCellValues[0][index] === boardWithCellValues[1][index] && boardWithCellValues[0][index] === boardWithCellValues[2][index] && boardWithCellValues[0][index] !== "") {
+          winner = boardWithCellValues[0][index];
+        }
+      })
+
+      if (boardWithCellValues[0][0] === boardWithCellValues[1][1] && boardWithCellValues[0][0] === boardWithCellValues[2][2] && boardWithCellValues[0][0] !== "") {
+        winner = boardWithCellValues[0][0];            
+      }
+
+      if (boardWithCellValues[0][2] === boardWithCellValues[1][1] && boardWithCellValues[2][0] === boardWithCellValues[1][1] && boardWithCellValues[1][1] !== "") {
+        winner = boardWithCellValues[1][1];
+            
+      }
+
+      console.log (winner);
+      return winner;
+
+    }
   
     printNewRound();
   
     return {
       playRound,
       getActivePlayer,
+      checkWinner,
       getBoard: board.getBoard
     };
   }
@@ -100,7 +132,7 @@ function Gameboard() {
     const playerTurnDiv = document.querySelector('.turn');
     const boardDiv = document.querySelector('.board');
   
-    const updateScreen = () => {
+    const updateScreen = (winner) => {
       // clear the board
       boardDiv.textContent = "";
   
@@ -110,16 +142,20 @@ function Gameboard() {
   
       // Display player's turn
       playerTurnDiv.textContent = `${activePlayer.name}'s turn...`
-  
+      if(winner) {
+        playerTurnDiv.textContent = `${winner} WINS!`
+      }
       // Render board squares
-      board.forEach(row => {
-        row.forEach((cell, index) => {
+      board.forEach((row, indexRow) => {
+        row.forEach((cell, indexColumn) => {
           // Anything clickable should be a button!!
           const cellButton = document.createElement("button");
           cellButton.classList.add("cell");
           // Create a data attribute to identify the column
           // This makes it easier to pass into our `playRound` function 
-          cellButton.dataset.column = index
+
+          cellButton.dataset.row = indexRow
+          cellButton.dataset.column = indexColumn
           cellButton.textContent = cell.getValue();
           boardDiv.appendChild(cellButton);
         })
@@ -128,12 +164,16 @@ function Gameboard() {
   
     // Add event listener for the board
     function clickHandlerBoard(e) {
+      const selectedRow = e.target.dataset.row;
       const selectedColumn = e.target.dataset.column;
       // Make sure I've clicked a column and not the gaps in between
       if (!selectedColumn) return;
       
-      game.playRound(selectedColumn);
-      updateScreen();
+      game.playRound(selectedColumn, selectedRow);
+
+
+      
+      updateScreen(game.checkWinner());
     }
     boardDiv.addEventListener("click", clickHandlerBoard);
   
