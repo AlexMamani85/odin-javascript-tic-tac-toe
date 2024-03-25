@@ -187,3 +187,6 @@ function Gameboard() {
   
   ScreenController();
   
+  restartBtn.addEventListener('click', () => {
+    window.location.reload();
+  });
